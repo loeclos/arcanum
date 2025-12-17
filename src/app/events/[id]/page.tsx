@@ -2,21 +2,25 @@
 
 import { useEventContext } from '@/contexts/event-detail-context';
 import useEntriesService from '@/services/use-entries-service';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import FullScreenAnimatedMenu from '@/components/ui/full-screen-menu';
-import { Button } from '@/components/ui/button'; // shadcn/ui Button
+import { Button } from '@/components/ui/button';
+import EntryCard from '@/components/entry';
 
 const PAGE_SIZE = 10;
 
 export default function EventDetail() {
     const { selectedEvent } = useEventContext();
-    const { getEntryByID, process, setProcess, clearError } = useEntriesService();
+    const { getEntryByID, process, setProcess, clearError } =
+        useEntriesService();
 
     const [entryIds, setEntryIds] = useState<number[]>([]);
-    const [entries, setEntries] = useState<any[]>([]); // adjust type if you have Entry type
-    const [loadedCount, setLoadedCount] = useState(0);
+    const [entries, setEntries] = useState<any[]>([]);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+    // Use ref to track if we should load more
+    const shouldLoadRef = useRef(false);
 
     if (!selectedEvent) {
         return (
@@ -35,20 +39,26 @@ export default function EventDetail() {
     // Set entry IDs when selectedEvent changes
     useEffect(() => {
         setEntryIds(selectedEvent.entries ?? []);
-        setLoadedCount(0); // reset when event changes
         setEntries([]);
+        shouldLoadRef.current = true; // Trigger initial load
     }, [selectedEvent]);
 
-    // Load initial batch and subsequent batches
+    // Load entries when shouldLoadRef changes
     useEffect(() => {
-        if (entryIds.length === 0 || loadedCount === 0) return;
+        if (!shouldLoadRef.current || entryIds.length === 0 || isLoadingMore) {
+            return;
+        }
 
-        const start = entries.length; // current loaded count
+        const start = entries.length;
         const end = Math.min(start + PAGE_SIZE, entryIds.length);
         const idsToLoad = entryIds.slice(start, end);
 
-        if (idsToLoad.length === 0) return;
+        if (idsToLoad.length === 0) {
+            shouldLoadRef.current = false;
+            return;
+        }
 
+        shouldLoadRef.current = false; // Reset flag
         setIsLoadingMore(true);
         clearError();
         setProcess('loading');
@@ -56,7 +66,6 @@ export default function EventDetail() {
         Promise.all(idsToLoad.map((id) => getEntryByID(id)))
             .then((newEntries) => {
                 setEntries((prev) => [...prev, ...newEntries]);
-                setLoadedCount((prev) => prev + newEntries.length);
                 setProcess('confirmed');
             })
             .catch((e: any) => {
@@ -66,34 +75,44 @@ export default function EventDetail() {
             .finally(() => {
                 setIsLoadingMore(false);
             });
-    }, [loadedCount, entryIds, getEntryByID, clearError, setProcess]);
-
-    // Trigger initial load
-    useEffect(() => {
-        if (entryIds.length > 0 && loadedCount === 0) {
-            setLoadedCount(PAGE_SIZE); // trigger loading first 10
-        }
-    }, [entryIds, loadedCount]);
+    }, [
+        entryIds,
+        entries.length,
+        isLoadingMore,
+        getEntryByID,
+        clearError,
+        setProcess,
+    ]);
 
     const handleLoadMore = () => {
         if (isLoadingMore || entries.length >= entryIds.length) return;
-        setLoadedCount((prev) => prev + PAGE_SIZE);
+        shouldLoadRef.current = true; // Trigger load
+        // Force re-render to trigger effect
+        setEntries([...entries]);
     };
 
     const hasMore = entries.length < entryIds.length;
 
     return (
         <div className="flex w-full h-full justify-center p-10">
-            <FullScreenAnimatedMenu />
+            {/* <FullScreenAnimatedMenu /> */}
             <div className="w-full max-w-4xl flex flex-col gap-8">
                 <div className="p-4">
-                    <h1 className="text-6xl font-serif">{selectedEvent.name}</h1>
-                    <p className="text-lg mt-2 font-mono">Date: {selectedEvent.date}</p>
+                    <h1 className="text-6xl font-serif">
+                        {selectedEvent.name}
+                    </h1>
+                    <p className="text-lg mt-2 font-mono">
+                        Date: {selectedEvent.date}
+                    </p>
                     <p className="text-lg font-mono">
                         Location:{' '}
-                        {selectedEvent.location ? selectedEvent.location : 'Shadesmar'}
+                        {selectedEvent.location
+                            ? selectedEvent.location
+                            : 'Shadesmar'}
                     </p>
-                    <p className="font-mono">Total Entries: {selectedEvent.entries.length}</p>
+                    <p className="font-mono">
+                        Total Entries: {selectedEvent.entries.length}
+                    </p>
                 </div>
 
                 <div className="p-4">
@@ -105,32 +124,37 @@ export default function EventDetail() {
                         <p className="text-red-500 mb-4">{errorMessage}</p>
                     )}
 
-                    {/* Here you would render your entries */}
                     <div className="space-y-6">
-                        {entries.map((entry, index) => (
-                            <div key={entry.id} className="p-4 border rounded-lg bg-card">
-                                {/* Replace with actual entry rendering */}
-                                <pre>{JSON.stringify(entry, null, 2)}</pre>
+                        {entries.map((entry) => (
+                            <div key={entry.id}>
+                                <EntryCard entry={entry} />
                             </div>
                         ))}
                     </div>
-
+                    {!hasMore && entries.length > 0 ? (
+                        <p className="text-center text-muted-foreground mt-8">
+                            All entries loaded.
+                        </p>
+                    ) : (
+                        <p className="my-5 text-center text-lg italic font-mono mb-6">
+                            Loaded {entries.length} of {entryIds.length}{' '}
+                            entries.
+                        </p>
+                    )}
                     {hasMore && (
                         <div className="mt-8 flex justify-center">
                             <Button
                                 onClick={handleLoadMore}
-                                disabled={isLoadingMore || process === 'loading'}
-                                size="lg"
-                            >
-                                {isLoadingMore ? 'Loading...' : 'Load More Entries'}
+                                disabled={
+                                    isLoadingMore || process === 'loading'
+                                }
+                                className='cursor-pointer'
+                                size="lg">
+                                {isLoadingMore
+                                    ? 'Loading...'
+                                    : 'Load More Entries'}
                             </Button>
                         </div>
-                    )}
-
-                    {!hasMore && entries.length > 0 && (
-                        <p className="text-center text-muted-foreground mt-8">
-                            All entries loaded.
-                        </p>
                     )}
                 </div>
             </div>

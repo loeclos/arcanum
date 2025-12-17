@@ -14,7 +14,6 @@ import { useState, useEffect } from 'react';
 import { useEventContext } from '@/contexts/event-detail-context';
 import EventsSkeleton from './skeleton';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
-import { Suspense } from 'react';
 
 
 interface EventResult {
@@ -65,10 +64,9 @@ export default function Events() {
     const [events, setEvents] = useState<EventResponse>();
     const [prevExists, setPrevExists] = useState(false);
     const [nextExists, setNextExists] = useState(false);
-    const [currentPage, setCurrentPage] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
     const { setSelectedEvent } = useEventContext();
     const router = useRouter();
-    const [errorMessage, setErrorMessage] = useState();
 
     useEffect(() => {
         clearError();
@@ -81,12 +79,11 @@ export default function Events() {
                 setPrevExists(data.previous != null);
             })
             .catch((e) => {
-                setErrorMessage(e.message);
+                console.error(e);
+                setProcess('error');
             });
         
     }, [currentPage]);
-
-    // useEffect(() => console.log(currentPage), [currentPage])
 
     const handleNextClick = () => {
         setCurrentPage(currPage => currPage + 1)

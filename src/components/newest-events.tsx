@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useEventContext } from '@/contexts/event-detail-context';
 import EventsSkeleton from '@/app/events/skeleton';
+import Link from 'next/link';
 
 interface EventResult {
     id: number;
@@ -91,9 +92,11 @@ export default function Events() {
                     </Card>
                 ))
             ) : <EventsSkeleton />}
-            <Button className="rounded-lg cursor-pointer">
+            <Link className='min-w-full h-full' href="/events/">
+            <Button className="w-full rounded-lg cursor-pointer">
                 See all events {'->'}
             </Button>
+            </Link>
         </div>
     );
 }
