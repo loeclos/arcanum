@@ -113,7 +113,7 @@ export default function Events() {
                                     className="w-full hover:border-neutral-400 dark:hover:border-neutral-500 transition-all duration-300 px-0">
                                     <CardHeader>
                                         <CardTitle>
-                                            <div className='flex flex-col gap-2 items-start p-0'>
+                                            <div className='flex flex-col gap-3 items-start p-0'>
                                             <Button
                                                 onClick={() =>
                                                     handleEventClick(event)
