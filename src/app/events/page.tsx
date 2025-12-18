@@ -110,19 +110,24 @@ export default function Events() {
                             events['results'].map((event) => (
                                 <Card
                                     key={event.id}
-                                    className="w-full hover:border-neutral-400 dark:hover:border-neutral-500 transition-all duration-300">
+                                    className="w-full hover:border-neutral-400 dark:hover:border-neutral-500 transition-all duration-300 px-0">
                                     <CardHeader>
                                         <CardTitle>
+                                            <div className='flex flex-col gap-2 items-start p-0'>
                                             <Button
                                                 onClick={() =>
                                                     handleEventClick(event)
                                                 }
                                                 variant={'text'}
-                                                className="p-0 cursor-pointer text-xl font-mono font-medium dark:font-thin hover:text-amber-600 dark:hover:text-amber-500 transition-colors duration-200">
+                                                className="p-0 cursor-pointer whitespace-normal md:whitespace-nowrap wrap-break-word text-lg md:text-xl font-mono font-medium dark:font-thin hover:text-amber-600 dark:hover:text-amber-500 transition-colors duration-200">
                                                 {event.name}
                                             </Button>
+                                                <span className="italic text-neutral-500 font-medium block md:hidden">
+                                                {event.date}
+                                            </span>
+                                            </div>
                                         </CardTitle>
-                                        <CardDescription>
+                                        <CardDescription className='hidden md:block'>
                                             {event.date}
                                         </CardDescription>
                                         <CardAction className='hidden md:block'>

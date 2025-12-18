@@ -21,29 +21,21 @@ export default function EventDetail() {
 
     // Use ref to track if we should load more
     const shouldLoadRef = useRef(false);
-
-    if (!selectedEvent) {
-        return (
-            <div className="p-4">
-                <p>
-                    No event data found. Please return to the{' '}
-                    <a href="/events" className="underline">
-                        list page
-                    </a>
-                    .
-                </p>
-            </div>
-        );
-    }
-
-    // Set entry IDs when selectedEvent changes
+    // Set entry IDs when selectedEvent changes (always call hook)
     useEffect(() => {
+        if (!selectedEvent) {
+            setEntryIds([]);
+            setEntries([]);
+            shouldLoadRef.current = false;
+            return;
+        }
+
         setEntryIds(selectedEvent.entries ?? []);
         setEntries([]);
         shouldLoadRef.current = true; // Trigger initial load
     }, [selectedEvent]);
 
-    // Load entries when shouldLoadRef changes
+    // Load entries when shouldLoadRef changes (always call hook)
     useEffect(() => {
         if (!shouldLoadRef.current || entryIds.length === 0 || isLoadingMore) {
             return;
@@ -84,6 +76,20 @@ export default function EventDetail() {
         setProcess,
     ]);
 
+    if (!selectedEvent) {
+        return (
+            <div className="p-4">
+                <p>
+                    No event data found. Please return to the{' '}
+                    <a href="/events" className="underline">
+                        list page
+                    </a>
+                    .
+                </p>
+            </div>
+        );
+    }
+
     const handleLoadMore = () => {
         if (isLoadingMore || entries.length >= entryIds.length) return;
         shouldLoadRef.current = true; // Trigger load
@@ -94,7 +100,7 @@ export default function EventDetail() {
     const hasMore = entries.length < entryIds.length;
 
     return (
-        <div className="flex w-full h-full justify-center p-10">
+        <div className="flex w-full h-full justify-center ">
             {/* <FullScreenAnimatedMenu /> */}
             <div className="w-full max-w-4xl flex flex-col gap-8">
                 <div className="p-4">

@@ -108,7 +108,7 @@ export default function EntryCard({ entry, className }: EntryCardProps) {
   };
 
   return (
-    <Card className={cn("w-full max-w-3xl shadow-sm flex flex-col", className)}>
+    <Card className={cn("w-full shadow-sm flex flex-col", className)}>
       {/* Layout Change: 
         - 'flex-col' by default for mobile (stacks vertically)
         - 'sm:flex-row' for tablets/desktop (side-by-side)
@@ -117,7 +117,7 @@ export default function EntryCard({ entry, className }: EntryCardProps) {
         
         {/* Title Section */}
         <div className="space-y-1 w-full">
-          <CardTitle className="text-xl dark:font-thin font-mono text-primary break-words">
+          <CardTitle className="text-xl dark:font-thin font-mono text-primary wrap-break-word">
             {entry.event_name}
           </CardTitle>
           <CardDescription className="flex flex-wrap items-center gap-2 text-sm">
@@ -269,7 +269,7 @@ export default function EntryCard({ entry, className }: EntryCardProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6 flex-grow">
+      <CardContent className="space-y-6 grow">
         {/* Render Lines */}
         {entry.lines.map((line, index) => (
           <div key={index} className="flex flex-col gap-1">

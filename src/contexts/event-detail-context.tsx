@@ -1,10 +1,7 @@
-// contexts/EventDetailContext.tsx
-
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-// Reuse your EventResult interface
 interface EventResult {
     id: number;
     name: string;
@@ -20,13 +17,38 @@ interface EventResult {
 
 interface EventContextType {
     selectedEvent: EventResult | null;
-    setSelectedEvent: (event: EventResult) => void;
+    setSelectedEvent: (event: EventResult | null) => void;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
+const STORAGE_KEY = 'selectedEvent';
+
 export const EventProvider = ({ children }: { children: ReactNode }) => {
-    const [selectedEvent, setSelectedEvent] = useState<EventResult | null>(null);
+    const [selectedEvent, setSelectedEventState] = useState<EventResult | null>(null);
+
+    /* 🔁 Load from localStorage on mount */
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                setSelectedEventState(JSON.parse(stored));
+            }
+        } catch (err) {
+            console.error('Failed to load event from localStorage', err);
+        }
+    }, []);
+
+    /* 💾 Save to localStorage whenever it changes */
+    const setSelectedEvent = (event: EventResult | null) => {
+        setSelectedEventState(event);
+
+        if (event) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(event));
+        } else {
+            localStorage.removeItem(STORAGE_KEY);
+        }
+    };
 
     return (
         <EventContext.Provider value={{ selectedEvent, setSelectedEvent }}>
@@ -37,7 +59,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
 
 export const useEventContext = () => {
     const context = useContext(EventContext);
-    if (context === undefined) {
+    if (!context) {
         throw new Error('useEventContext must be used within an EventProvider');
     }
     return context;
